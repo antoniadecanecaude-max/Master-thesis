@@ -1,0 +1,33 @@
+import pandas as pd
+
+# 1. Load the datasets
+# Note: Using the actual filenames of the files you uploaded
+df_adv = pd.read_csv('Advanced.csv')
+df_tot = pd.read_csv('Player Totals.csv')
+
+# 2. Define merge keys 
+# We include 'age' and 'mp' in the merge keys so pandas doesn't create duplicate _x and _y columns
+merge_keys = ['player_id', 'season', 'team', 'age', 'mp']
+
+# 3. Perform the inner merge
+merged_df = pd.merge(df_adv, df_tot, on=merge_keys, how='inner')
+
+# 4. Loop to clean 'ast', 'mp', and 'age' (handling European comma decimals)
+cols_to_clean = ['ast', 'mp', 'age']
+
+for col in cols_to_clean:
+    # Check if the column is stored as a string/object (which happens if it contains commas)
+    if merged_df[col].dtype == 'object':
+        # Replace commas with dots and convert to float
+        merged_df[col] = merged_df[col].str.replace(',', '.').astype(float)
+    else:
+        # If it's already numeric, just ensure it's a float
+        merged_df[col] = merged_df[col].astype(float)
+
+# 5. Drop any rows with missing data (NaN) in these core columns
+merged_df = merged_df.dropna(subset=cols_to_clean)
+
+# 6. Save the final cleaned dataset to a new CSV
+merged_df.to_csv('Cleaned_Merged_Dataset.csv', index=False)
+
+print(f"Cleaned dataset ready! Total rows remaining: {len(merged_df)}")
